@@ -12,6 +12,8 @@ dependencies = [
     "pillow",
     "pywidevine",
     "yt-dlp",
+    "python-telegram-bot",
+    "python-dotenv",
 ]
 readme = "README.md"
 dynamic = ["version"]
@@ -26,3 +28,4 @@ build-backend = "flit_core.buildapi"
 
 [project.scripts]
 gamdl = "gamdl.cli:main"
+gamdl-telegram-bot = "gamdl.telegram_bot.bot:main"
