@@ -10,3 +10,5 @@ termcolor
 yt-dlp
 python-telegram-bot
 python-dotenv
+SQLAlchemy
+psycopg2-binary
