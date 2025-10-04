@@ -12,11 +12,10 @@ ENV DEBIAN_FRONTEND=noninteractive \
 
 WORKDIR /app
 
-# System packages: ffmpeg (remux), gpac -> MP4Box (optional remux), curl+unzip (for mp4decrypt), ca-certs (TLS)
+# System packages: ffmpeg (remux), curl+unzip (for mp4decrypt), ca-certs (TLS)
 RUN apt-get update -qq && \
     apt-get install -y --no-install-recommends \
       ffmpeg \
-      gpac \
       ca-certificates \
       curl \
       unzip && \
@@ -47,7 +46,6 @@ ENV OUTPUT_ROOT=/data/downloads \
 COPY . /app
 
 # Python deps: install local repo and bot dependencies.
-# Note: keep local repo precedence; don't overwrite with PyPI package.
 RUN pip install --upgrade pip && \
     if [ -f "pyproject.toml" ]; then pip install --no-cache-dir . ; fi && \
     if [ -f "requirements.txt" ]; then pip install --no-cache-dir -r requirements.txt ; fi && \
