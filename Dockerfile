@@ -12,7 +12,7 @@ ENV DEBIAN_FRONTEND=noninteractive \
 
 WORKDIR /app
 
-# System packages: ffmpeg (remux), gpac -> MP4Box (optional remux), curl+unzip (for mp4decrypt)
+# System packages: ffmpeg (remux), gpac -> MP4Box (optional remux), curl+unzip (for mp4decrypt), ca-certs (TLS)
 RUN apt-get update -qq && \
     apt-get install -y --no-install-recommends \
       ffmpeg \
@@ -38,16 +38,16 @@ RUN set -eux; \
     ln -sf /opt/bento4/bin/mp4decrypt /usr/local/bin/mp4decrypt && \
     rm -f /tmp/bento4.zip
 
-# Pre-create runtime dirs
+# Runtime dirs
 RUN mkdir -p /data/downloads /app/telegram_bot/secrets /data/logs
 ENV OUTPUT_ROOT=/data/downloads \
     RUN_LOG_DIR=/data/logs
 
-# Copy sources first (leverage layer cache by copying manifest files first if you want)
+# Copy source
 COPY . /app
 
-# Python deps: install local repo (this one) + bot deps
-# Note: DON'T install PyPI gamdl over local package to avoid override.
+# Python deps: install local repo and bot dependencies.
+# Note: keep local repo precedence; don't overwrite with PyPI package.
 RUN pip install --upgrade pip && \
     if [ -f "pyproject.toml" ]; then pip install --no-cache-dir . ; fi && \
     if [ -f "requirements.txt" ]; then pip install --no-cache-dir -r requirements.txt ; fi && \
@@ -55,16 +55,15 @@ RUN pip install --upgrade pip && \
       "python-telegram-bot>=20.7,<21" \
       "python-dotenv>=1.0.1" \
       "mutagen>=1.47.0" \
-      "requests>=2.31.0"
+      "requests>=2.31.0" \
+      "SQLAlchemy>=2.0" \
+      "psycopg2-binary>=2.9"
 
-# Show installed gamdl version (from local repo)
+# Show installed gamdl version (from local repo if it provides console script)
 RUN gamdl --version || true
-
-# Entrypoint
-COPY entrypoint.sh /app/entrypoint.sh
-RUN chmod +x /app/entrypoint.sh
 
 # Healthcheck (lightweight)
 HEALTHCHECK --interval=30s --timeout=5s --start-period=20s CMD python -c "import sys; sys.exit(0)"
 
-ENTRYPOINT ["/bin/sh", "/app/entrypoint.sh"]
+# Run the Telegram bot
+CMD ["python", "-m", "gamdl.telegram_bot.bot"]
